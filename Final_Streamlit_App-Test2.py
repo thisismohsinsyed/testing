@@ -24,6 +24,7 @@ if uploaded_file is not None:
         st.image(roi, caption='Detected Region Of Interest', use_column_width=True)
         results = process_image(cv2.cvtColor(roi, cv2.COLOR_RGB2BGR))
         st.write("Particle Count:", results)
+        st.write("<iframe src='location.html' width='600' height='400'></iframe>", unsafe_allow_html=True)
 # Step 1: Automatically fetch the user's latitude and longitude using their IP
         @st.cache(allow_output_mutation=True)
         def get_location():
