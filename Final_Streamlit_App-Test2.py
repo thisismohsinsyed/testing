@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image
 import cv2
 import numpy as np
@@ -6,58 +7,63 @@ from Contours_Detection_And_Classification_of_Pm_10_Particles_Final_Test import 
 from ROI_Extraction import extract_roi_from_image_array
 import folium
 from streamlit_folium import st_folium
-import streamlit.components.v1 as components
 
 st.title("Particle Analysis App")
 
-# Step 1: JavaScript to fetch client-side geolocation
+# JavaScript to fetch client-side geolocation
 def get_geolocation():
     geolocation_js = """
     <script>
     function getLocation() {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(showPosition, showError);
-        } else { 
-            window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'Geolocation is not supported by this browser.'}, '*');
+        } else {
+            document.getElementById('geolocation').innerHTML = "Geolocation is not supported by this browser.";
         }
     }
     function showPosition(position) {
-        window.parent.postMessage({type: 'streamlit:setComponentValue', value: [position.coords.latitude, position.coords.longitude]}, '*');
+        document.getElementById('geolocation').innerHTML = "Latitude: " + position.coords.latitude + 
+        "<br>Longitude: " + position.coords.longitude;
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: [position.coords.latitude, position.coords.longitude]
+        }, '*');
     }
     function showError(error) {
-        var errorMessage = 'Unknown error';
         switch(error.code) {
             case error.PERMISSION_DENIED:
-                errorMessage = "User denied the request for Geolocation."
+                document.getElementById('geolocation').innerHTML = "User denied the request for Geolocation."
                 break;
             case error.POSITION_UNAVAILABLE:
-                errorMessage = "Location information is unavailable."
+                document.getElementById('geolocation').innerHTML = "Location information is unavailable."
                 break;
             case error.TIMEOUT:
-                errorMessage = "The request to get user location timed out."
+                document.getElementById('geolocation').innerHTML = "The request to get user location timed out."
                 break;
-            case error.UNKNOWN_ERROR:
-                errorMessage = "An unknown error occurred."
+            default:
+                document.getElementById('geolocation').innerHTML = "An unknown error occurred."
                 break;
         }
-        window.parent.postMessage({type: 'streamlit:setComponentValue', value: errorMessage}, '*');
+        window.parent.postMessage({type: 'streamlit:setComponentValue', value: 'Error'}, '*');
     }
     getLocation();
     </script>
+    <div id="geolocation">Waiting for location...</div>
     """
-    components.html(geolocation_js, height=0)
+    components.html(geolocation_js, height=100)
 
+# Fetch and display geolocation
 if "geo_data" not in st.session_state:
     get_geolocation()
-    st.session_state["geo_data"] = None
 
-# Display received geolocation data or error
-if st.session_state["geo_data"]:
+if "geo_data" in st.session_state and st.session_state["geo_data"] != 'Error':
     if isinstance(st.session_state["geo_data"], list):
         latitude, longitude = st.session_state["geo_data"]
-        st.success(f"Your location has been automatically determined: Latitude {latitude}, Longitude {longitude}")
-    else:
-        st.error(st.session_state["geo_data"])
+        st.success(f"Location obtained: Latitude {latitude}, Longitude {longitude}")
+    elif st.session_state["geo_data"] == 'Error':
+        st.error("Error fetching geolocation.")
+else:
+    st.warning("Location not yet available or permission denied.")
 
 # Step 2: Image Upload and Processing
 uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
@@ -65,8 +71,8 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     image_array = np.array(image)
     image_array = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)  # Convert RGB to BGR for OpenCV
+
     image_with_contour, roi = extract_roi_from_image_array(image_array)
-    
     if image_with_contour is not None:
         st.image(image_with_contour, caption='Detected Inner Square From Input Image', use_column_width=True)
     if roi is not None:
