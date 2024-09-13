@@ -53,6 +53,7 @@ def process_image(image_array):
     count_up_to_1um = sum(1 for d in diameters_um if d <= 1)
     count_up_to_2_5um = sum(1 for d in diameters_um if 1 < d <= 2.5)
     count_up_to_10um = sum(1 for d in diameters_um if 2.5 < d <= 10)
+    Total_Pm10=count_up_to_1um + count_up_to_2_5um + count_up_to_10um
     count_above_10um = sum(1 for d in diameters_um if d > 10)
 
     # Returning results based on the attached image configuration
@@ -66,8 +67,8 @@ def process_image(image_array):
     
     # Define pollution levels based on dot count per cm^2 as shown in the attached image
     pollution_level = "Unknown"
-    dots_per_cm2 = results[">10um"] / 36  # Assuming a square centimeter is 10x10 pixels
-
+    dots_per_cm2 = Total_Pm10 / 36  # Assuming a square centimeter is 10x10 pixels
+    #print("The particles detected per cm2 are ",dots_per_cm2)
     if dots_per_cm2 > 50:
         pollution_level = "Very High"
     elif dots_per_cm2 >= 26:
@@ -78,8 +79,7 @@ def process_image(image_array):
         pollution_level = "Low"
     
     return {
+        "The particles detected per cm2 are":dots_per_cm2,
         "Pollution Level": pollution_level,
         "Details": results
     }
-
-# The rest of the Streamlit interface would use this process_image function to display results.
