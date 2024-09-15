@@ -1,10 +1,8 @@
-
+import os
 import requests
-# Set your Google Maps API key here
-API_KEY = "AIzaSyAbt3a_IHhehoMhFs4ZkIuCB75TeM4D1VA"
 
-
-
+# Fetch the Google Maps API key from the environment variable
+API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 def get_location(city_name):
     """Retrieve the location data from Google Maps API based on city name."""
