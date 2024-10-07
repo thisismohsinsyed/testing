@@ -13,6 +13,11 @@ import time
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 import streamlit.components.v1 as components
+import gdown
+from keras.models import load_model
+
+# Google Drive shareable link
+url = 'https://drive.google.com/uc?id=1CqEOZlMffOMD4iJpztQWH40Zhu2hmtd8'
 
 # Set page configuration and theme related to air pollution
 st.set_page_config(page_title="Air Pollution Particle Analysis", layout="wide")
@@ -67,12 +72,23 @@ if city_name:
             st.text_input("Longitude", value=lng)
     else:
         st.error("City not found. Please enter a valid city name.")
-# Load model function
 @st.cache_resource
-def load_model():
-    model = tf.keras.models.load_model('model.h5')
+def load_model_from_drive():
+    # Google Drive shareable link
+    url = 'https://drive.google.com/uc?id=1CqEOZlMffOMD4iJpztQWH40Zhu2hmtd8'
+    
+    # Output file path
+    output = 'model.h5'
+    
+    # Download the file from the Google Drive link
+    gdown.download(url, output, quiet=False)
+    
+    # Load the model using TensorFlow/Keras
+    model = tf.keras.models.load_model(output)
     return model
-model = load_model()
+
+# Load the model using the defined function
+model = load_model_from_drive()
 
 def predict_image(model, image_file):
     with st.spinner('Classifying...'):
